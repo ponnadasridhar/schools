@@ -1,12 +1,10 @@
-const ADMIN_USERNAME='admin';
-const ADMIN_PASSWORD='Admin@123';
 const API_BASE='';
 function read(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def}catch{return def}}
 function write(key,val){localStorage.setItem(key,JSON.stringify(val))}
-function getAdminPassword(){const v=localStorage.getItem('adminPassword');return v?v:ADMIN_PASSWORD}
-function setAdminPassword(p){localStorage.setItem('adminPassword',p)}
-function getAdminUsername(){const v=localStorage.getItem('adminUsername');return v?v:ADMIN_USERNAME}
+function getAdminUsername(){return localStorage.getItem('adminUsername')||''}
 function setAdminUsername(u){localStorage.setItem('adminUsername',u)}
+function getAdminPassword(){return localStorage.getItem('adminPassword')||''}
+function setAdminPassword(p){localStorage.setItem('adminPassword',p)}
 function getSchool(){return read('schoolData',{})}
 function setSchool(d){write('schoolData',d)}
 function getAchievements(){return read('galleryAchievements',[])}
@@ -114,8 +112,6 @@ function setupPasswordChange(){
         .then(r=>r.json())
         .then(j=>{
           if(j&&j.ok){
-            if(newU){setAdminUsername(newU)}
-            if(newPwd){setAdminPassword(newPwd)}
             status.textContent='Updated';
             document.getElementById('oldUsername').value='';
             document.getElementById('oldPassword').value='';
