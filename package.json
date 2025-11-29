@@ -10,11 +10,9 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^4.19.2",
-    "nodemailer": "^6.9.8"
+    "express": "^4.19.2"
   },
   "devDependencies": {
-    "localtunnel": "^2.0.2",
-    "po": "^4.5.2"
+    "localtunnel": "^2.0.2"
   }
 }
