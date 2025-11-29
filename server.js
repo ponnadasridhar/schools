@@ -1,6 +1,6 @@
 const express=require('express');
 const cors=require('cors');
-const nodemailer=require('nodemailer');
+// nodemailer removed
 const path=require('path');
 require('dotenv').config();
 
@@ -9,10 +9,7 @@ app.use(express.json());
 app.use(cors({origin:true,methods:['GET','POST','OPTIONS'],credentials:false}));
 app.options('*',cors());
 
-function isAuthed(req){
-  const c=req.headers.cookie||'';
-  return c.includes('auth=1');
-}
+// cookie gating removed
 
 app.get('/',(req,res)=>{
   res.sendFile(path.join(__dirname,'index.html'));
@@ -20,10 +17,7 @@ app.get('/',(req,res)=>{
 app.get('/admin.html',(req,res)=>{
   res.sendFile(path.join(__dirname,'admin.html'));
 });
-app.get('/logout',(req,res)=>{
-  res.setHeader('Set-Cookie','auth=; Max-Age=0; Path=/');
-  res.redirect('/');
-});
+// logout route removed
 app.use(express.static(path.join(__dirname)));
 
 const adminCreds={
@@ -63,85 +57,15 @@ app.post('/api/admin/change',(req,res)=>{
   }
 });
 
-const otpStore=new Map(); // email -> { code, expires }
-const DEFAULT_ADMIN_EMAIL=process.env.ADMIN_EMAIL||'ponnadasridhar05@gmail.com';
-const EXP_MS=5*60*1000;
+// OTP store removed
 
-function makeTransport(){
-  const host=process.env.SMTP_HOST;
-  const port=process.env.SMTP_PORT?Number(process.env.SMTP_PORT):465;
-  const user=process.env.SMTP_USER;
-  const pass=process.env.SMTP_PASS;
-  if(!host||!user||!pass){
-    return null;
-  }
-  const cfg={
-    host,
-    port,
-    secure:port===465,
-    auth:{user,pass}
-  };
-  if(host.includes('gmail')){
-    cfg.requireTLS=true;
-  }
-  return nodemailer.createTransport(cfg);
-}
+// SMTP transport removed
 
-function generate(){
-  return String(Math.floor(100000+Math.random()*900000));
-}
+// OTP generator removed
 
-app.post('/api/send-otp',async(req,res)=>{
-  try{
-    let {email}=req.body||{};
-    if(!email) email=DEFAULT_ADMIN_EMAIL;
-    if(!email) return res.status(400).json({ok:false,error:'email required'});
-    const code=generate();
-    otpStore.set(email,{code,expires:Date.now()+EXP_MS});
-    const transporter=makeTransport();
-    if(!transporter){
-      console.warn('SMTP not configured. OTP for',email,'is',code);
-      return res.json({ok:true,preview:true,code});
-    }
-    const from=process.env.SMTP_FROM||process.env.SMTP_USER;
-    try{
-      await transporter.sendMail({
-        from,
-        to:email,
-        subject:'Your Admin OTP',
-        text:`Your OTP is ${code}. It expires in 5 minutes.`,
-      });
-      res.json({ok:true});
-    }catch(err){
-      console.error('SMTP send failed:',err&&err.message?err.message:err);
-      res.json({ok:true,preview:true,code});
-    }
-  }catch(err){
-    console.error(err);
-    res.status(500).json({ok:false,error:'send_failed'});
-  }
-});
+// send-otp removed
 
-app.post('/api/verify-otp',(req,res)=>{
-  try{
-    let {email,code}=req.body||{};
-    if(!email) email=DEFAULT_ADMIN_EMAIL;
-    if(!email||!code) return res.status(400).json({ok:false,error:'email_and_code_required'});
-    const entry=otpStore.get(email);
-    if(!entry) return res.status(400).json({ok:false,error:'no_otp'});
-    if(Date.now()>entry.expires){
-      otpStore.delete(email);
-      return res.status(400).json({ok:false,error:'expired'});
-    }
-    if(entry.code!==code) return res.status(400).json({ok:false,error:'invalid'});
-    otpStore.delete(email);
-    res.setHeader('Set-Cookie','auth=1; Path=/');
-    return res.json({ok:true});
-  }catch(err){
-    console.error(err);
-    res.status(500).json({ok:false,error:'verify_failed'});
-  }
-});
+// verify-otp removed
 
 const BASE_PORT=Number(process.env.PORT||3000);
 function listen(port){
