@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .container{max-width:640px;margin:0 auto;padding:16px}
+  </style>
+  <script>
+    async function sendOtp(email){
+      const body=email?{email}:{ };
+      const r=await fetch('/api/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      return r.json();
+    }
+    async function verifyOtp(email,code){
+      const body=email?{email,code}:{code};
+      const r=await fetch('/api/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      return r.json();
+    }
+    function show(el,flag){el.style.display=flag?'':'none'}
+    function init(){
+      const status=document.getElementById('status');
+      const emailInput=document.getElementById('email');
+      document.getElementById('send').addEventListener('click',()=>{
+        status.textContent='Sending OTP...';
+        sendOtp(emailInput.value.trim()).then(j=>{
+          if(j&&j.ok){
+            status.textContent=j.preview?('OTP: '+(j.code||'')):'OTP sent to email';
+            show(document.getElementById('step2'),true);
+          }else{status.textContent='Failed to send OTP'}
+        }).catch(()=>{status.textContent='Failed to send OTP'});
+      });
+      document.getElementById('verify').addEventListener('click',()=>{
+        const code=document.getElementById('otp').value.trim();
+        status.textContent='Verifying...';
+        verifyOtp(emailInput.value.trim(),code).then(j=>{
+          if(j&&j.ok){
+            status.textContent='Verified';
+            window.location.href='/';
+          }else{status.textContent='Invalid or expired OTP'}
+        }).catch(()=>{status.textContent='Verification failed'});
+      });
+    }
+    document.addEventListener('DOMContentLoaded',init);
+  </script>
+</head>
+<body>
+  <header class="header"><div class="brand">Login</div></header>
+  <main class="container">
+    <section class="section">
+      <div class="form" style="max-width:420px">
+        <div class="form-row"><label for="email">Email</label><input id="email" type="email" required></div>
+        <button id="send" class="btn" type="button">Send OTP</button>
+        <div id="step2" style="display:none;margin-top:12px">
+          <div class="form-row"><label for="otp">OTP</label><input id="otp" inputmode="numeric" pattern="[0-9]*" required></div>
+          <button id="verify" class="btn" type="button">Verify</button>
+        </div>
+        <div id="status" class="status" style="margin-top:12px"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
